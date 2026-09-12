@@ -129,7 +129,8 @@ function showIntro(){
  let closing=false,timer;function dismiss(){if(closing)return;closing=true;clearTimeout(timer);intro.classList.add('leaving');setTimeout(()=>{intro.remove();surfaces.forEach(el=>el.inert=false);if(previousFocus&&previousFocus!==document.body)previousFocus.focus({preventScroll:true});else document.querySelector('#upload').focus({preventScroll:true})},700)}
  skip.onclick=dismiss;intro.addEventListener('click',dismiss);intro.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();dismiss()}});timer=setTimeout(dismiss,3400);
 }
-showIntro();
+// intro disabled: open the studio immediately
+
 
 // Row-based effect browser: the control drawer participates in normal layout.
 (function glassBrowser(){
