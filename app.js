@@ -1,5 +1,4 @@
 const $=s=>document.querySelector(s), canvas=$('#canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true}),source=document.createElement('canvas'),sc=source.getContext('2d',{willReadFrequently:true});
-source.width=source.height=0;
 let zoomLevel=null;
 const defs=[['bleed','Ink bleed',[['spread','Spread',2,0,6],['wear','Wear',12,0,60]]],['dither','Dither',[['scale','Pixel size',3,1,12]]],['half','Halftone',[['dot','Dot spacing',8,3,22]]],['riso','Risograph',[['offset','Misregistration',5,0,16],['grain','Grain',22,0,65]]],['ascii','ASCII',[['cell','Character size',10,6,24]]],['sort','Pixel sorting',[['threshold','Threshold',100,10,240],['length','Streak length',60,10,200]]]];
 defs.push(
@@ -94,7 +93,7 @@ function applyExtraEffects(w,h){
  }
 }
 async function upload(file){if(!file)return;if(!file.type.startsWith('image/')){$('#status').textContent='Выберите файл изображения.';return}try{const image=await createImageBitmap(file);const scale=Math.min(1,1200/Math.max(image.width,image.height));source.width=Math.max(1,Math.round(image.width*scale));source.height=Math.max(1,Math.round(image.height*scale));sc.drawImage(image,0,0,source.width,source.height);image.close();$('#sourceName').textContent=file.name;updatePreview();original=false;$('#compare').textContent='покажи оригинал';$('#compare').setAttribute('aria-pressed','false');render()}catch{$('#status').textContent='Не удалось открыть изображение. Используйте PNG, JPG или WebP.'}}
-$('#upload').onclick=()=>$('#file').click();$('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};for(const id of ['ink','paper'])$('#'+id).onchange=render;$('#transparent').onchange=render;$('#compare').onclick=()=>{original=!original;$('#compare').textContent=original?'покажи результат':'покажи оригинал';$('#compare').setAttribute('aria-pressed',String(original));render()};$('#export').onclick=e=>{if(!source.width||!source.height){e.preventDefault();$('#status').textContent='Сначала загрузите изображение';return}cancelAnimationFrame(job);process(true);e.currentTarget.href=canvas.toDataURL('image/png');if(original)requestAnimationFrame(render)};const dz=$('#dropzone');dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};dz.ondragleave=()=>dz.classList.remove('over');dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');upload(e.dataTransfer.files[0])};
+$('#upload').onclick=()=>$('#file').click();$('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};for(const id of ['ink','paper'])$('#'+id).onchange=render;$('#transparent').onchange=render;$('#compare').onclick=()=>{original=!original;$('#compare').textContent=original?'покажи результат':'покажи оригинал';$('#compare').setAttribute('aria-pressed',String(original));render()};$('#export').onclick=()=>{cancelAnimationFrame(job);process(true);canvas.toBlob(blob=>{if(!blob)return;const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='exckapeworkshop-artwork.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},'image/png');if(original)render()};const dz=$('#dropzone');dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};dz.ondragleave=()=>dz.classList.remove('over');dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');upload(e.dataTransfer.files[0])};
 
 // Row-based effect browser: the control drawer participates in normal layout.
 (function glassBrowser(){
@@ -130,7 +129,7 @@ function updateZoom(){
 (function setupZoom(){
  const area=$('#dropzone'),stage=document.createElement('div');stage.className='zoom-stage';area.append(stage);stage.append(canvas);
  function setZoom(value){zoomLevel=value;updateZoom();requestAnimationFrame(()=>{area.scrollLeft=(area.scrollWidth-area.clientWidth)/2;area.scrollTop=(area.scrollHeight-area.clientHeight)/2})}
- function change(delta){if(!source.width||!source.height)return;const current=zoomLevel===null?Math.round(Math.min((area.clientWidth-32)/source.width,(area.clientHeight-32)/source.height)*100):zoomLevel;setZoom(Math.max(10,Math.min(400,Math.round(current/25)*25+delta)))}
+ function change(delta){const current=zoomLevel===null?Math.round(Math.min((area.clientWidth-32)/source.width,(area.clientHeight-32)/source.height)*100):zoomLevel;setZoom(Math.max(10,Math.min(400,Math.round(current/25)*25+delta)))}
  $('#zoomIn').onclick=()=>change(25);$('#zoomOut').onclick=()=>change(-25);$('#zoomFit').onclick=()=>setZoom(null);$('#zoomSelect').onchange=e=>{if(e.target.value!=='custom')setZoom(e.target.value==='fit'?null:Number(e.target.value))};
  const ro=new ResizeObserver(updateZoom);ro.observe(area);updateZoom();
 })();
