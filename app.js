@@ -32,7 +32,7 @@ defs.push(
  ['shutter','Slow shutter',[['distance','Movement',35,0,120],['angle','Angle',20,0,180],['blend','Ghost exposure',55,0,100]]]
 );
 for(const [, ,knobs] of defs)knobs.push(['toneExposure','exposure adjustment',0,-60,60],['contrastTune','tonal contrast',0,-60,60]);
-let state={},original=false,job=0;
+let state={},original=false,job=0,hasImage=false;
 for(const [id,,knobs]of defs){
  state[id]={on:false};
  const el=document.createElement('div');el.className='effect';
@@ -92,8 +92,8 @@ function applyExtraEffects(w,h){
  ctx.putImageData(a,0,0);
  }
 }
-async function upload(file){if(!file)return;if(!file.type.startsWith('image/')){$('#status').textContent='Выберите файл изображения.';return}try{const image=await createImageBitmap(file);const scale=Math.min(1,1200/Math.max(image.width,image.height));source.width=Math.max(1,Math.round(image.width*scale));source.height=Math.max(1,Math.round(image.height*scale));sc.drawImage(image,0,0,source.width,source.height);image.close();$('#sourceName').textContent=file.name;updatePreview();original=false;$('#compare').textContent='покажи оригинал';$('#compare').setAttribute('aria-pressed','false');render()}catch{$('#status').textContent='Не удалось открыть изображение. Используйте PNG, JPG или WebP.'}}
-$('#upload').onclick=()=>$('#file').click();$('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};for(const id of ['ink','paper'])$('#'+id).onchange=render;$('#transparent').onchange=render;$('#compare').onclick=()=>{original=!original;$('#compare').textContent=original?'покажи результат':'покажи оригинал';$('#compare').setAttribute('aria-pressed',String(original));render()};$('#export').onclick=()=>{cancelAnimationFrame(job);process(true);canvas.toBlob(blob=>{if(!blob)return;const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='exckapeworkshop-artwork.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},'image/png');if(original)render()};const dz=$('#dropzone');dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};dz.ondragleave=()=>dz.classList.remove('over');dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');upload(e.dataTransfer.files[0])};
+async function upload(file){if(!file)return;if(!file.type.startsWith('image/')){$('#status').textContent='Выберите файл изображения.';return}try{const image=await createImageBitmap(file);const scale=Math.min(1,1200/Math.max(image.width,image.height));source.width=Math.max(1,Math.round(image.width*scale));source.height=Math.max(1,Math.round(image.height*scale));sc.drawImage(image,0,0,source.width,source.height);image.close();hasImage=true;$('#export').disabled=false;$('#sourceName').textContent=file.name;updatePreview();original=false;$('#compare').textContent='покажи оригинал';$('#compare').setAttribute('aria-pressed','false');render()}catch{$('#status').textContent='Не удалось открыть изображение. Используйте PNG, JPG или WebP.'}}
+$('#upload').onclick=()=>$('#file').click();$('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};for(const id of ['ink','paper'])$('#'+id).onchange=render;$('#transparent').onchange=render;$('#compare').onclick=()=>{original=!original;$('#compare').textContent=original?'покажи результат':'покажи оригинал';$('#compare').setAttribute('aria-pressed',String(original));render()};$('#export').onclick=()=>{if(!hasImage)return;cancelAnimationFrame(job);process(true);canvas.toBlob(blob=>{if(!blob)return;const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='exckapeworkshop-artwork.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},'image/png');if(original)render()};const dz=$('#dropzone');dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};dz.ondragleave=()=>dz.classList.remove('over');dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');upload(e.dataTransfer.files[0])};
 
 // Row-based effect browser: the control drawer participates in normal layout.
 (function glassBrowser(){
@@ -129,7 +129,7 @@ function updateZoom(){
 (function setupZoom(){
  const area=$('#dropzone'),stage=document.createElement('div');stage.className='zoom-stage';area.append(stage);stage.append(canvas);
  function setZoom(value){zoomLevel=value;updateZoom();requestAnimationFrame(()=>{area.scrollLeft=(area.scrollWidth-area.clientWidth)/2;area.scrollTop=(area.scrollHeight-area.clientHeight)/2})}
- function change(delta){const current=zoomLevel===null?Math.round(Math.min((area.clientWidth-32)/source.width,(area.clientHeight-32)/source.height)*100):zoomLevel;setZoom(Math.max(10,Math.min(400,Math.round(current/25)*25+delta)))}
+ function change(delta){if(!hasImage)return;const current=zoomLevel===null?Math.round(Math.min((area.clientWidth-32)/source.width,(area.clientHeight-32)/source.height)*100):zoomLevel;setZoom(Math.max(10,Math.min(400,Math.round(current/25)*25+delta)))}
  $('#zoomIn').onclick=()=>change(25);$('#zoomOut').onclick=()=>change(-25);$('#zoomFit').onclick=()=>setZoom(null);$('#zoomSelect').onchange=e=>{if(e.target.value!=='custom')setZoom(e.target.value==='fit'?null:Number(e.target.value))};
  const ro=new ResizeObserver(updateZoom);ro.observe(area);updateZoom();
 })();
