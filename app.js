@@ -41,7 +41,7 @@ for(const [id,,knobs]of defs){
  for(const[key]of knobs)el.querySelector('#'+id+'-'+key).oninput=e=>{state[id][key]=+e.target.value;$('#'+id+'-'+key+'-val').value=e.target.value;render()}
 }
 
-function updateThumb(){zoomLevel=null;updateZoom();const el=$('#sourceThumb');if(el){const c=document.createElement('canvas');c.width=120;c.height=120;const t=c.getContext('2d'),r=Math.min(120/source.width,120/source.height);t.drawImage(source,(120-source.width*r)/2,(120-source.height*r)/2,source.width*r,source.height*r);el.src=c.toDataURL('image/png')}}
+function updatePreview(){zoomLevel=null;updateZoom()}
 
 function rgb(v){return [1,3,5].map(i=>parseInt(v.slice(i,i+2),16))}function noise(i){const x=Math.sin(i*127.1+19.7)*43758.5453;return x-Math.floor(x)}
 function render(){cancelAnimationFrame(job);if(!source.width||!source.height)return;job=requestAnimationFrame(()=>process())}
@@ -92,7 +92,7 @@ function applyExtraEffects(w,h){
  ctx.putImageData(a,0,0);
  }
 }
-async function upload(file){if(!file)return;if(!file.type.startsWith('image/')){$('#status').textContent='Выберите файл изображения.';return}try{const image=await createImageBitmap(file);const scale=Math.min(1,1200/Math.max(image.width,image.height));source.width=Math.max(1,Math.round(image.width*scale));source.height=Math.max(1,Math.round(image.height*scale));sc.drawImage(image,0,0,source.width,source.height);image.close();$('#sourceName').textContent=file.name;$('#sourceThumb').alt='Оригинал: '+file.name;updateThumb();original=false;$('#compare').textContent='покажи оригинал';$('#compare').setAttribute('aria-pressed','false');render()}catch{$('#status').textContent='Не удалось открыть изображение. Используйте PNG, JPG или WebP.'}}
+async function upload(file){if(!file)return;if(!file.type.startsWith('image/')){$('#status').textContent='Выберите файл изображения.';return}try{const image=await createImageBitmap(file);const scale=Math.min(1,1200/Math.max(image.width,image.height));source.width=Math.max(1,Math.round(image.width*scale));source.height=Math.max(1,Math.round(image.height*scale));sc.drawImage(image,0,0,source.width,source.height);image.close();$('#sourceName').textContent=file.name;updatePreview();original=false;$('#compare').textContent='покажи оригинал';$('#compare').setAttribute('aria-pressed','false');render()}catch{$('#status').textContent='Не удалось открыть изображение. Используйте PNG, JPG или WebP.'}}
 $('#upload').onclick=()=>$('#file').click();$('#file').onchange=e=>{upload(e.target.files[0]);e.target.value=''};for(const id of ['ink','paper'])$('#'+id).onchange=render;$('#transparent').onchange=render;$('#compare').onclick=()=>{original=!original;$('#compare').textContent=original?'покажи результат':'покажи оригинал';$('#compare').setAttribute('aria-pressed',String(original));render()};$('#export').onclick=()=>{cancelAnimationFrame(job);process(true);canvas.toBlob(blob=>{if(!blob)return;const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='exckapeworkshop-artwork.png';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)},'image/png');if(original)render()};const dz=$('#dropzone');dz.ondragover=e=>{e.preventDefault();dz.classList.add('over')};dz.ondragleave=()=>dz.classList.remove('over');dz.ondrop=e=>{e.preventDefault();dz.classList.remove('over');upload(e.dataTransfer.files[0])};
 
 // Row-based effect browser: the control drawer participates in normal layout.
