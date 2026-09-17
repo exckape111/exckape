@@ -138,7 +138,7 @@ function updateZoom(){
 (function refinePreview(){
  const area=$('#dropzone'),header=document.querySelector('header');let drag=null;
  function syncLayout(){
-  if(innerWidth>760){header.style.left=area.getBoundingClientRect().left+'px';header.style.paddingLeft='0px'}else{header.style.removeProperty('left');header.style.removeProperty('padding-left')}
+  if(innerWidth>760){const rect=area.getBoundingClientRect();header.style.left=rect.left+'px';header.style.right=innerWidth-rect.right+'px';header.style.paddingLeft='0px';header.style.paddingRight='0px'}else{header.style.removeProperty('left');header.style.removeProperty('right');header.style.removeProperty('padding-left');header.style.removeProperty('padding-right')}
   area.classList.toggle('pannable',area.scrollWidth>area.clientWidth+1||area.scrollHeight>area.clientHeight+1);
  }
  const ro=new ResizeObserver(syncLayout);ro.observe(area);ro.observe(canvas);window.addEventListener('resize',syncLayout);syncLayout();
