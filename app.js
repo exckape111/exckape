@@ -43,7 +43,7 @@ for(const [id,,knobs]of defs){
 
 function updatePreview(){zoomLevel=null;updateZoom()}
 
-const ink=[245,245,247],paper=[17,17,17],inkColor='#f5f5f7',paperColor='#111111';
+const ink=[237,238,240],paper=[0,15,8],inkColor='#EDEEF0',paperColor='#000f08';
 function noise(i){const x=Math.sin(i*127.1+19.7)*43758.5453;return x-Math.floor(x)}
 function render(){cancelAnimationFrame(job);if(!source.width||!source.height)return;job=requestAnimationFrame(()=>process())}
 function process(exporting=false){const w=source.width,h=source.height;if(!w||!h)return;canvas.width=w;canvas.height=h;updateZoom();ctx.drawImage(source,0,0);$('#dimensions').textContent=w+' × '+h+' PX';if(original&&!exporting){$('#status').textContent='Оригинальное изображение';return}const enabled=defs.filter(([id])=>state[id].on);if(!enabled.length){$('#status').textContent='Оригинал · примените эффект';return}$('#status').textContent=enabled.map(x=>x[1]).join(' + ');let img=sc.getImageData(0,0,w,h),lum=new Float32Array(w*h),alpha=new Uint8Array(w*h);const activeStates=defs.filter(([id])=>state[id].on).map(([id])=>state[id]);const exposure=activeStates.reduce((v,st)=>v+st.toneExposure,0),contrast=activeStates.reduce((v,st)=>v*(1+st.contrastTune/100),1);for(let j=0;j<img.data.length;j+=4)for(let k=0;k<3;k++)img.data[j+k]=(img.data[j+k]-128)*contrast+128+exposure*2;for(let i=0;i<lum.length;i++){lum[i]=(.2126*img.data[i*4]+.7152*img.data[i*4+1]+.0722*img.data[i*4+2])/255;alpha[i]=img.data[i*4+3]}
